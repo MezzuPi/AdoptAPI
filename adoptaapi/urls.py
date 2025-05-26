@@ -34,4 +34,5 @@ urlpatterns = [
     
     # Testing endpoints
     path('registro-prueba/', registro_prueba, name='registro-prueba'),
+    path('login-prueba/', login_prueba, name='login-prueba'),
 ]

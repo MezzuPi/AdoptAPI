@@ -262,3 +262,40 @@ def api_documentation(request):
     }
     
     return Response(documentation, status=status.HTTP_200_OK)
+
+
+@csrf_exempt
+def login_prueba(request):
+    if request.method == 'GET':
+        html_form = """
+        <form method="post">
+            <h2>Test Login</h2>
+            Email: <input type="email" name="username" required><br>
+            Contraseña: <input type="password" name="password" required><br>
+            <button type="submit">Login</button>
+        </form>
+        """
+        return HttpResponse(html_form)
+    elif request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+
+        user = authenticate(request, username=username, password=password)
+
+        if user is not None:
+            token, created = Token.objects.get_or_create(user=user)
+            response_html = f"""
+            <h2>Login Exitoso!</h2>
+            <p><strong>Usuario:</strong> {user.username}</p>
+            <p><strong>Tipo:</strong> {user.tipo}</p>
+            <p><strong>Token:</strong> {token.key}</p>
+            <p><a href="/registro-prueba/">Registrar otro</a> | <a href="/login-prueba/">Login otro</a></p>
+            """
+            return HttpResponse(response_html)
+        else:
+            error_html = """
+            <h2>Error de Login</h2>
+            <p>Credenciales inválidas. Inténtalo de nuevo.</p>
+            <p><a href="/login-prueba/">Volver a Login</a></p>
+            """
+            return HttpResponse(error_html, status=401)
