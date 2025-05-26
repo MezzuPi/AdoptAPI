@@ -37,16 +37,16 @@ class CompanyRegistrationView(generics.CreateAPIView):
 @permission_classes([AllowAny])
 def login_view(request):
     """
-    Vista para login que devuelve un token de autenticación
+    Vista para login que devuelve un token de autenticación y establece una sesión.
     """
     serializer = UserLoginSerializer(data=request.data)
     if serializer.is_valid():
         username = serializer.validated_data['username']
         password = serializer.validated_data['password']
         
-        user = authenticate(username=username, password=password)
+        user = authenticate(request, username=username, password=password)
         if user:
-            # Crear o obtener token
+            login(request, user)
             token, created = Token.objects.get_or_create(user=user)
             return Response({
                 'token': token.key,
@@ -67,17 +67,19 @@ def login_view(request):
 @permission_classes([IsAuthenticated])
 def logout_view(request):
     """
-    Vista para logout que elimina el token
+    Vista para logout que elimina el token y cierra la sesión.
     """
     try:
         # Eliminar el token del usuario
-        request.user.auth_token.delete()
+        if hasattr(request.user, 'auth_token') and request.user.auth_token:
+            request.user.auth_token.delete()
+        logout(request)
         return Response({
             'message': 'Logout exitoso'
         }, status=status.HTTP_200_OK)
-    except:
+    except Exception as e:
         return Response({
-            'error': 'Error al hacer logout'
+            'error': f'Error al hacer logout: {str(e)}'
         }, status=status.HTTP_400_BAD_REQUEST)
 
 
