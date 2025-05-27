@@ -30,7 +30,11 @@ SECRET_KEY = 'django-insecure-me$g+iy0!h46aji$+3_)a^@j2=#komnk=n%l6!f8uw(bx=&(e5
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    '127.0.0.1',
+    'localhost',
+    '.ngrok-free.app',  # Note the leading dot for wildcard subdomains
+]
 
 # Modelo de usuario personalizado
 AUTH_USER_MODEL = 'usuarios.CustomUser'
