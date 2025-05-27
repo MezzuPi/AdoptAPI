@@ -9,3 +9,4 @@ django-filter
 cloudinary
 python-dotenv
 Pillow
+django-cors-headers

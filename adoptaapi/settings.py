@@ -55,11 +55,13 @@ INSTALLED_APPS = [
     'usuarios',
     'animales',
     'cloudinary',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -170,3 +172,18 @@ REST_FRAMEWORK = {
         'rest_framework.parsers.FileUploadParser',
     ],
 }
+
+# CORS settings
+CORS_ALLOW_ALL_ORIGINS = True  # Or configure CORS_ALLOWED_ORIGINS for specific domains
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://*.ngrok-free.app',
+    'http://localhost:3000', # Assuming your frontend runs on port 3000, adjust if necessary
+    'http://127.0.0.1:3000', # Assuming your frontend runs on port 3000, adjust if necessary
+]
+
+# You can also configure other CORS settings like:
+# CORS_ALLOW_METHODS = [...]
+# CORS_ALLOW_HEADERS = [...]
+# CORS_EXPOSE_HEADERS = [...]
+# CORS_ALLOW_CREDENTIALS = True  # If your frontend needs to send cookies
