@@ -180,6 +180,22 @@ CSRF_TRUSTED_ORIGINS = [
     'https://*.ngrok-free.app',
     'http://localhost:3000', # Assuming your frontend runs on port 3000, adjust if necessary
     'http://127.0.0.1:3000', # Assuming your frontend runs on port 3000, adjust if necessary
+    'http://localhost:5173', # Added previously
+    'http://127.0.0.1:5173', # Added previously
+]
+
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+    'ngrok-skip-browser-warning',  # Added for Ngrok
+    # 'access-control-allow-origin', # This was from a previous step, usually not needed as a request header
 ]
 
 # You can also configure other CORS settings like:
