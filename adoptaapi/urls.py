@@ -16,27 +16,31 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from usuarios.views import *
-
+# Remove old view imports if they are no longer directly used here
+# from usuarios.views import UserRegistrationView, CompanyRegistrationView, login_view, logout_view, user_profile, api_documentation
+from usuarios.views import api_documentation # Keep if still used
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api-auth/', include('rest_framework.urls')),
-    
+    path('api-auth/', include('rest_framework.urls')), # For browsable API login/logout
+
     # API Documentation
-    path('api/', api_documentation, name='api-docs'),
-    
-    # Endpoints de autenticación
-    path('api/register/user/', UserRegistrationView.as_view(), name='user-register'),
-    path('api/register/company/', CompanyRegistrationView.as_view(), name='company-register'),
-    path('api/login/', login_view, name='login'),
-    path('api/logout/', logout_view, name='logout'),
-    path('api/profile/', user_profile, name='user-profile'),
-    
+    path('api/docs/', api_documentation, name='api-docs'), # Updated path for API documentation
+
+    # New Authentication Endpoints using include
+    path('api/auth/', include('usuarios.urls')), # This will prefix all urls in usuarios.urls with api/auth/
+
+    # Endpoints de autenticación (Old ones - to be commented or removed if replaced)
+    # path('api/register/user/', UserRegistrationView.as_view(), name='user-register'),
+    # path('api/register/company/', CompanyRegistrationView.as_view(), name='company-register'),
+    # path('api/login/', login_view, name='login'),
+    # path('api/logout/', logout_view, name='logout'),
+    # path('api/profile/', user_profile, name='user-profile'),
+
     # Animales endpoints
     path('api/', include('animales.urls')),
-    
-    # Testing endpoints
-    path('registro-prueba/', registro_prueba, name='registro-prueba'),
-    path('login-prueba/', login_prueba, name='login-prueba'),
+
+    # Testing endpoints (Keep if still needed)
+    # path('registro-prueba/', registro_prueba, name='registro-prueba'),
+    # path('login-prueba/', login_prueba, name='login-prueba'),
 ]

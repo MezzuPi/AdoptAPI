@@ -1,17 +1,18 @@
 from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
-from usuarios.serializers import UserRegistrationSerializer, CompanyRegistrationSerializer, UserLoginSerializer
+from usuarios.serializers import UserRegistrationSerializer, UserLoginSerializer, UserDetailSerializer
 from rest_framework.parsers import JSONParser
 from django.views.decorators.csrf import csrf_exempt
 import json
-from rest_framework import generics, status
+from rest_framework import generics, status, permissions
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate, login, logout, get_user_model
 from rest_framework.authtoken.models import Token
 from usuarios.models import CustomUser
 
+CustomUser = get_user_model()
 
 # View Registro de usuario adoptante
 class UserRegistrationView(generics.CreateAPIView):
@@ -26,11 +27,11 @@ class UserRegistrationView(generics.CreateAPIView):
         return super().post(request, *args, **kwargs)
 
 
-# View Registro de empresa
-class CompanyRegistrationView(generics.CreateAPIView):
-    queryset = CustomUser.objects.all()
-    serializer_class = CompanyRegistrationSerializer
-    permission_classes = [AllowAny]
+# View Registro de empresa (Comment out or remove this class)
+# class CompanyRegistrationView(generics.CreateAPIView):
+#     queryset = CustomUser.objects.all()
+#     serializer_class = CompanyRegistrationSerializer # This serializer is no longer available
+#     permission_classes = [AllowAny]
 
 
 @api_view(['POST'])
@@ -230,36 +231,48 @@ def api_documentation(request):
     """
     documentation = {
         'endpoints': {
-            'POST /api/register/user/': 'Registrar usuario adoptante',
-            'POST /api/register/company/': 'Registrar empresa/protectora',
-            'POST /api/login/': 'Login (devuelve token)',
-            'POST /api/logout/': 'Logout (requiere token)',
-            'GET /api/profile/': 'Obtener perfil del usuario (requiere token)',
-            'GET /registro-prueba/': 'Formulario de prueba HTML',
+            'POST /api/auth/register/': 'Registrar nuevo usuario (solo tipo USUARIO). Campos: email, password, password_confirm, [opcional: tipo=\"USUARIO\", telefono, provincia, y campos de perfil de adoptante].',
+            'POST /api/auth/login/': 'Iniciar sesión de usuario (USUARIO o EMPRESA). Campos: email, password. Devuelve token y datos de usuario.',
+            'POST /api/auth/logout/': 'Cerrar sesión de usuario (requiere token). Invalida el token en el servidor.',
+            'GET /api/auth/profile/': 'Obtener perfil del usuario autenticado (requiere token).',
+            'PUT/PATCH /api/auth/profile/': 'Actualizar perfil del usuario autenticado (requiere token).',
+            # Documentación de animales (asumiendo que está en animales.urls y accesible bajo /api/)
+            'GET /api/animales/': 'Listar todos los animales (requiere autenticación).',
+            'POST /api/animales/': 'Crear un nuevo animal (requiere autenticación y ser tipo EMPRESA).',
+            'GET /api/animales/{id}/': 'Obtener detalles de un animal específico (requiere autenticación).',
+            'PUT /api/animales/{id}/': 'Actualizar un animal (requiere autenticación, usualmente EMPRESA dueña o admin).',
+            'DELETE /api/animales/{id}/': 'Eliminar un animal (requiere autenticación, usualmente EMPRESA dueña o admin).',
+            
+            # Comentando las rutas antiguas que estaban aquí si ya no son las principales o fueron eliminadas
+            # 'POST /api/register/user/': 'Registrar usuario adoptante', 
+            # 'POST /api/register/company/': 'Registrar empresa/protectora',
+            # 'POST /api/login/': 'Login (devuelve token)', 
+            # 'POST /api/logout/': 'Logout (requiere token)',
+            # 'GET /api/profile/': 'Obtener perfil del usuario (requiere token)',
+            'GET /registro-prueba/': 'Formulario de prueba HTML para registro (solo para desarrollo).',
         },
         'auth_header': 'Authorization: Token tu_token_aqui',
-        'example_user_registration': {
-            'username': 'user@example.com',
-            'password': 'mi_password',
-            'password2': 'mi_password',
-            'tipo': 'USUARIO',
-            'telefono': '123456789',
+        'example_user_registration (POST /api/auth/register/)': {
+            'email': 'usuario@example.com',
+            'password': 'tu_contraseña_segura',
+            'password_confirm': 'tu_contraseña_segura',
+            'tipo': 'USUARIO', # Este campo es opcional, por defecto es USUARIO. No se permite EMPRESA.
+            'telefono': '600112233',
             'provincia': 'Madrid',
-            'tiene_ninos': True,
-            'tiene_otros_animales': False,
+            # ... otros campos opcionales de perfil de adoptante ...
         },
-        'example_company_registration': {
-            'username': 'empresa@example.com',
-            'password': 'mi_password',
-            'password2': 'mi_password',
-            'tipo': 'EMPRESA',
-            'telefono': '123456789',
-            'provincia': 'Madrid',
-            'nombre_empresa': 'Mi Protectora',
-        },
-        'example_login': {
-            'username': 'user@example.com',
-            'password': 'mi_password',
+        # 'example_company_registration': { # Comentado porque el registro de empresa es via admin
+        #     'username': 'empresa@example.com',
+        #     'password': 'mi_password',
+        #     'password2': 'mi_password',
+        #     'tipo': 'EMPRESA',
+        #     'telefono': '123456789',
+        #     'provincia': 'Madrid',
+        #     'nombre_empresa': 'Mi Protectora',
+        # },
+        'example_login (POST /api/auth/login/)': {
+            'email': 'usuario@example.com', # o empresa@example.com
+            'password': 'tu_contraseña',
         }
     }
     
@@ -301,3 +314,73 @@ def login_prueba(request):
             <p><a href="/login-prueba/">Volver a Login</a></p>
             """
             return HttpResponse(error_html, status=401)
+
+
+class UserLoginView(generics.CreateAPIView):
+    """
+    API view for user login.
+    Allows registered users to log in and obtain an authentication token.
+    """
+    queryset = CustomUser.objects.all()
+    serializer_class = UserLoginSerializer
+    permission_classes = [AllowAny] # Anyone can attempt to log in
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data, context={'request': request})
+        if serializer.is_valid():
+            user = serializer.validated_data['user']
+            # For session-based auth, login the user:
+            # login(request, user)
+            
+            # For token-based auth, create or retrieve a token:
+            token, created = Token.objects.get_or_create(user=user)
+            user_data = UserDetailSerializer(user).data
+            return Response({
+                "message": "Inicio de sesión correcto.",
+                "token": token.key,
+                "user": user_data
+            }, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class UserLogoutView(generics.CreateAPIView):
+    """
+    API view for user logout.
+    If using token authentication, this typically involves deleting the token on the client-side.
+    If using session authentication, this logs the user out of the session.
+    """
+    queryset = CustomUser.objects.all()
+    serializer_class = UserLoginSerializer
+    permission_classes = [IsAuthenticated] # Only authenticated users can log out
+
+    def post(self, request, *args, **kwargs):
+        # For token-based authentication, the client should discard the token.
+        # If you want to invalidate the token on the server-side (requires custom token handling or Django Rest Knox/dj-rest-auth):
+        try:
+            # This will delete the user's current token, forcing them to re-authenticate.
+            request.user.auth_token.delete()
+        except (AttributeError, Token.DoesNotExist):
+            # Handle cases where the token might not exist or user has no auth_token attribute
+            pass # Or log this, depending on your error handling policy
+
+        # For session-based authentication, call Django's logout:
+        # logout(request)
+        
+        return Response({"message": "Cierre de sesión exitoso."}, status=status.HTTP_200_OK)
+
+
+class UserProfileView(generics.RetrieveUpdateAPIView):
+    """
+    API view for retrieving and updating the authenticated user's profile.
+    """
+    queryset = CustomUser.objects.all()
+    serializer_class = UserDetailSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        """Return the authenticated user's profile data."""
+        return super().get(request, *args, **kwargs)
+
+    def put(self, request, *args, **kwargs):
+        """Update the authenticated user's profile data."""
+        return super().put(request, *args, **kwargs)
