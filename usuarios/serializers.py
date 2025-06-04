@@ -11,13 +11,12 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
     Handles creation of new users, ensuring password is properly hashed.
     """
     password = serializers.CharField(write_only=True, required=True, style={'input_type': 'password'})
-    password_confirm = serializers.CharField(write_only=True, required=True, style={'input_type': 'password'})
     email = serializers.EmailField(required=True, validators=[validate_email]) # Ensure email is validated
 
     class Meta:
         model = CustomUser
         # Define fields based on your CustomUser model, excluding username if it's derived from email
-        fields = ('email', 'password', 'password_confirm', 'tipo', 'telefono', 'provincia',
+        fields = ('email', 'password', 'tipo', 'telefono', 'provincia',
                   'nombre_empresa', 'tiene_ninos', 'tiene_otros_animales', 'tipo_vivienda',
                   'prefiere_pequenos', 'disponible_para_paseos', 'acepta_enfermos',
                   'acepta_viejos', 'busca_tranquilo', 'tiene_trabajo', 'animal_estara_solo')
@@ -70,9 +69,6 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         Check if passwords match.
         Ensure 'nombre_empresa' is blank for 'USUARIO' type if registration is for 'USUARIO'.
         """
-        if attrs['password'] != attrs['password_confirm']:
-            raise serializers.ValidationError({"password_confirm": "Las contraseñas no coinciden."})
-        
         # tipo should be 'USUARIO' if it passed validate_tipo
         # We check initial_data in case 'nombre_empresa' was sent in the request
         submitted_nombre_empresa = self.initial_data.get('nombre_empresa')
@@ -97,7 +93,6 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         """
         Create and return a new user instance, given the validated data.
         """
-        validated_data.pop('password_confirm')
         user = CustomUser.objects.create_user(**validated_data)
         return user
 

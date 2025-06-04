@@ -130,7 +130,6 @@ def registro_prueba(request):
         <form method="post">
             Email: <input type="email" name="username" required><br>
             Contraseña: <input type="password" name="password" required><br>
-            Confirmar contraseña: <input type="password" name="password2" required><br>
             Tipo: <select name="tipo" required>
                 <option value="USUARIO">Usuario Adoptante</option>
                 <option value="EMPRESA">Empresa/Protectora</option>
@@ -188,7 +187,6 @@ def registro_prueba(request):
         data = {
             'username': request.POST.get('username'),
             'password': request.POST.get('password'),
-            'password2': request.POST.get('password2'),
             'tipo': tipo,
             'telefono': request.POST.get('telefono', ''),
             'provincia': request.POST.get('provincia', ''),
@@ -231,7 +229,7 @@ def api_documentation(request):
     """
     documentation = {
         'endpoints': {
-            'POST /api/auth/register/': 'Registrar nuevo usuario (solo tipo USUARIO). Campos: email, password, password_confirm, [opcional: tipo=\"USUARIO\", telefono, provincia, y campos de perfil de adoptante].',
+            'POST /api/auth/register/': 'Registrar nuevo usuario (solo tipo USUARIO). Campos: email, password, [opcional: tipo=\"USUARIO\", telefono, provincia, y campos de perfil de adoptante].',
             'POST /api/auth/login/': 'Iniciar sesión de usuario (USUARIO o EMPRESA). Campos: email, password. Devuelve token y datos de usuario.',
             'POST /api/auth/logout/': 'Cerrar sesión de usuario (requiere token). Invalida el token en el servidor.',
             'GET /api/auth/profile/': 'Obtener perfil del usuario autenticado (requiere token).',
@@ -255,7 +253,6 @@ def api_documentation(request):
         'example_user_registration (POST /api/auth/register/)': {
             'email': 'usuario@example.com',
             'password': 'tu_contraseña_segura',
-            'password_confirm': 'tu_contraseña_segura',
             'tipo': 'USUARIO', # Este campo es opcional, por defecto es USUARIO. No se permite EMPRESA.
             'telefono': '600112233',
             'provincia': 'Madrid',
