@@ -60,10 +60,10 @@ class Animal(models.Model):
     problema_salud = models.BooleanField(default=False)
     descripcion_salud = models.CharField(max_length=255, blank=True)
 
-    imagen1 = models.URLField(blank=True)
-    imagen2 = models.URLField(blank=True)
-    imagen3 = models.URLField(blank=True)
-    imagen4 = models.URLField(blank=True)
+    imagen1 = models.URLField(blank=True, null=True)
+    imagen2 = models.URLField(blank=True, null=True)
+    imagen3 = models.URLField(blank=True, null=True)
+    imagen4 = models.URLField(blank=True, null=True)
 
     def __str__(self):
         return self.nombre
