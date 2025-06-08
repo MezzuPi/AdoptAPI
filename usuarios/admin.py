@@ -4,14 +4,14 @@ from .models import CustomUser
 
 class CustomUserAdmin(UserAdmin):
     # Campos que se muestran en la lista de usuarios
-    list_display = ('username', 'tipo', 'telefono', 'provincia', 'is_staff', 'date_joined')
+    list_display = ('username', 'nombre', 'tipo', 'telefono', 'provincia', 'is_staff', 'date_joined')
     list_filter = ('tipo', 'provincia', 'is_staff', 'is_active', 'es_aprobada')
-    search_fields = ('username', 'telefono', 'nombre_empresa')
+    search_fields = ('username', 'nombre', 'telefono', 'nombre_empresa')
     
     # Organización de campos en el formulario de edición
     fieldsets = UserAdmin.fieldsets + (
         ('Información Adicional', {
-            'fields': ('tipo', 'telefono', 'provincia')
+            'fields': ('nombre', 'tipo', 'telefono', 'provincia')
         }),
         ('Perfil de Adoptante', {
             'fields': (
@@ -30,7 +30,7 @@ class CustomUserAdmin(UserAdmin):
     # Campos para mostrar al crear un nuevo usuario
     add_fieldsets = UserAdmin.add_fieldsets + (
         ('Información Adicional', {
-            'fields': ('tipo', 'telefono', 'provincia')
+            'fields': ('nombre', 'tipo', 'telefono', 'provincia')
         }),
     )
 

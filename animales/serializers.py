@@ -7,7 +7,6 @@ class AnimalSerializer(serializers.ModelSerializer):
     imagen2_file = serializers.ImageField(write_only=True, required=False)
     imagen3_file = serializers.ImageField(write_only=True, required=False)
     imagen4_file = serializers.ImageField(write_only=True, required=False)
-    estado = serializers.CharField(read_only=True)
 
     class Meta:
         model = Animal
