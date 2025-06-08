@@ -71,6 +71,7 @@ class CustomUser(AbstractUser):
     provincia = models.CharField(max_length=50, choices=PROVINCIAS_CHOICES, blank=True)
 
     # Solo para usuario adoptante
+    nombre = models.CharField(max_length=100, blank=True)    
     tiene_ninos = models.BooleanField(default=False)
     tiene_otros_animales = models.BooleanField(default=False)
     tipo_vivienda = models.BooleanField(default=False)

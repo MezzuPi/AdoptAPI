@@ -44,6 +44,12 @@ class Animal(models.Model):
         ('desconocido', 'Desconocido')
     ]
 
+    ESTADO_CHOICES = [
+        ('No adoptado', 'No adoptado'),
+        ('En proceso', 'En proceso'),
+        ('Adoptado', 'Adoptado'),
+    ]
+
     empresa = models.ForeignKey(CustomUser, on_delete=models.CASCADE, limit_choices_to={'tipo': 'EMPRESA'}, related_name='animales') 
     nombre = models.CharField(max_length=100)
     especie = models.CharField(max_length=10, choices=ESPECIE_CHOICES)
@@ -64,6 +70,7 @@ class Animal(models.Model):
     imagen2 = models.URLField(blank=True, null=True)
     imagen3 = models.URLField(blank=True, null=True)
     imagen4 = models.URLField(blank=True, null=True)
+    estado = models.CharField(max_length=30, choices=ESTADO_CHOICES, default='No adoptado')
 
     def __str__(self):
         return self.nombre
