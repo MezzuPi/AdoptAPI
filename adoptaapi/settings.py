@@ -34,6 +34,7 @@ ALLOWED_HOSTS = [
     '127.0.0.1',
     'localhost',
     '.ngrok-free.app',  # Note the leading dot for wildcard subdomains
+    'adoptapi-production.up.railway.app',
 ]
 
 # Modelo de usuario personalizado
