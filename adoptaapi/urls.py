@@ -30,6 +30,9 @@ urlpatterns = [
     # New Authentication Endpoints using include
     path('api/auth/', include('usuarios.urls')), # This will prefix all urls in usuarios.urls with api/auth/
 
+    # Password Reset Endpoints
+    path('api/password_reset/', include('django.contrib.auth.urls')), # Adds Django's built-in password reset views
+
     # Endpoints de autenticación (Old ones - to be commented or removed if replaced)
     # path('api/register/user/', UserRegistrationView.as_view(), name='user-register'),
     # path('api/register/company/', CompanyRegistrationView.as_view(), name='company-register'),

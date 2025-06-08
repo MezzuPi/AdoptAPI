@@ -198,6 +198,14 @@ CORS_ALLOW_HEADERS = [
     # 'access-control-allow-origin', # This was from a previous step, usually not needed as a request header
 ]
 
+# Email Configuration for Password Reset
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'newtailsoporte@gmail.com'  # Your Gmail address
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')  # Load from .env file
+
 # You can also configure other CORS settings like:
 # CORS_ALLOW_METHODS = [...]
 # CORS_ALLOW_HEADERS = [...]
