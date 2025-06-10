@@ -55,8 +55,9 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'usuarios',
     'animales',
-    'cloudinary',
+    'peticiones',
     'corsheaders',
+    'cloudinary',
 ]
 
 MIDDLEWARE = [

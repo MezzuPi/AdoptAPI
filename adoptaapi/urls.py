@@ -18,14 +18,28 @@ from django.contrib import admin
 from django.urls import path, include
 # Remove old view imports if they are no longer directly used here
 # from usuarios.views import UserRegistrationView, CompanyRegistrationView, login_view, logout_view, user_profile, api_documentation
-from usuarios.views import api_documentation # Keep if still used
+from usuarios.views import UserRegistrationView, UserLoginView, api_documentation # Keep if still used
+from rest_framework import routers
+from animales.views import AnimalViewSet
+
+router = routers.DefaultRouter()
+router.register(r'animales', AnimalViewSet, basename='animales')
+# No es necesario registrar UserRegistrationView, ya que es una vista concreta.
+# router.register(r'usuarios', UserViewSet)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('api/', include(router.urls)),
+    path('api/', include('peticiones.urls')),
+
+    # User management endpoints
+    path('api/register/', UserRegistrationView.as_view(), name='user_register'),
+    path('api/login/', UserLoginView.as_view(), name='user_login'),
+
     path('api-auth/', include('rest_framework.urls')), # For browsable API login/logout
 
     # API Documentation
-    path('api/docs/', api_documentation, name='api-docs'), # Updated path for API documentation
+    path('api/docs/', api_documentation, name='api-docs'),
 
     # New Authentication Endpoints using include
     path('api/auth/', include('usuarios.urls')), # This will prefix all urls in usuarios.urls with api/auth/

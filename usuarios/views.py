@@ -241,12 +241,13 @@ def api_documentation(request):
             'PUT /api/animales/{id}/': 'Actualizar un animal (requiere autenticación, usualmente EMPRESA dueña o admin).',
             'DELETE /api/animales/{id}/': 'Eliminar un animal (requiere autenticación, usualmente EMPRESA dueña o admin).',
             
-            # Comentando las rutas antiguas que estaban aquí si ya no son las principales o fueron eliminadas
-            # 'POST /api/register/user/': 'Registrar usuario adoptante', 
-            # 'POST /api/register/company/': 'Registrar empresa/protectora',
-            # 'POST /api/login/': 'Login (devuelve token)', 
-            # 'POST /api/logout/': 'Logout (requiere token)',
-            # 'GET /api/profile/': 'Obtener perfil del usuario (requiere token)',
+            # Documentación de Peticiones
+            'GET /api/peticiones/': 'Listar peticiones. Para usuarios, lista sus propias peticiones. Para empresas, lista las peticiones de sus animales.',
+            'POST /api/peticiones/': 'Crear una nueva petición de adopción para un animal. Requiere ser tipo USUARIO. Campo: animal (ID del animal).',
+            'GET /api/peticiones/{id}/': 'Ver el detalle de una petición específica.',
+            'PUT/PATCH /api/peticiones/{id}/': 'Actualizar una petición. Requiere ser tipo EMPRESA y dueña del animal. Campos: estado ("Aceptada", "Rechazada"), leida (true/false). Al aceptar, el estado del animal cambia a "En proceso".',
+            'DELETE /api/peticiones/{id}/': 'Cancelar (eliminar) una petición. Requiere ser el USUARIO que la creó. Solo se puede cancelar si el estado es "Pendiente".',
+            
             'GET /registro-prueba/': 'Formulario de prueba HTML para registro (solo para desarrollo).',
         },
         'auth_header': 'Authorization: Token tu_token_aqui',
