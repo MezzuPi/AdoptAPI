@@ -8,26 +8,46 @@ from .serializers import AnimalSerializer
 
 class IsEmpresaUser(permissions.BasePermission):
     """
-    Custom permission to only allow users of type 'EMPRESA' to create animals.
+    Custom permission to only allow users of type 'EMPRESA' to access POST.
     """
     def has_permission(self, request, view):
-        if request.method == 'POST': # Only check for POST requests (creation)
-            return request.user and request.user.is_authenticated and request.user.tipo == 'EMPRESA'
-        return True # Allow other methods (GET, PUT, DELETE) for authenticated users
+        # Allow all users to see the list or details of animals
+        if view.action in ['list', 'retrieve']:
+            return True
+        # Only allow companies to create animals
+        return request.user.is_authenticated and request.user.tipo == 'EMPRESA'
+
+class IsOwner(permissions.BasePermission):
+    """
+    Custom permission to only allow the owner of an object to edit it.
+    Assumes the model instance has an `empresa` attribute.
+    """
+    def has_object_permission(self, request, view, obj):
+        # Write permissions are only allowed to the company that owns the animal.
+        return obj.empresa == request.user
 
 class AnimalViewSet(viewsets.ModelViewSet):
     queryset = Animal.objects.all()
     serializer_class = AnimalSerializer
-    permission_classes = [permissions.IsAuthenticated, IsEmpresaUser]
+    
+    def get_permissions(self):
+        """
+        Instantiates and returns the list of permissions that this view requires.
+        - Anyone can list or view.
+        - Companies can create.
+        - Only the owner company can update or delete.
+        """
+        if self.action in ['update', 'partial_update', 'destroy']:
+            self.permission_classes = [IsOwner]
+        elif self.action == 'create':
+            self.permission_classes = [IsEmpresaUser]
+        else: # list, retrieve
+            self.permission_classes = [permissions.AllowAny]
+        return super().get_permissions()
 
     def perform_create(self, serializer):
-        # Automatically set the empresa to the logged-in user
-        if self.request.user.is_authenticated and self.request.user.tipo == 'EMPRESA':
-            serializer.save(empresa=self.request.user)
-        else:
-            # This case should ideally be caught by IsEmpresaUser permission
-            # but as a fallback:
-            return Response({"detail": "User must be an EMPRESA to create an animal."}, status=status.HTTP_403_FORBIDDEN)
+        """Automatically set the empresa to the logged-in user."""
+        serializer.save(empresa=self.request.user)
 
     # You can add more custom actions or override other methods here if needed
     # For example, to list only animals created by the current empresa:
