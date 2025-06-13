@@ -17,12 +17,13 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         model = CustomUser
         # Define fields based on your CustomUser model, excluding username if it's derived from email
         fields = ('email', 'password', 'tipo', 'telefono', 'provincia',
-                  'nombre', 'nombre_empresa', 'tiene_ninos', 'tiene_otros_animales', 'tipo_vivienda',
+                  'nombre', 'biografia', 'nombre_empresa', 'tiene_ninos', 'tiene_otros_animales', 'tipo_vivienda',
                   'prefiere_pequenos', 'disponible_para_paseos', 'acepta_enfermos',
                   'acepta_viejos', 'busca_tranquilo', 'tiene_trabajo', 'animal_estara_solo')
         extra_kwargs = {
             'nombre_empresa': {'required': False, 'allow_blank': True},
             'nombre': {'required': False, 'allow_blank': True},
+            'biografia': {'required': False, 'allow_blank': True},
             'tiene_ninos': {'required': False},
             'tiene_otros_animales': {'required': False},
             'tipo_vivienda': {'required': False},
@@ -138,7 +139,7 @@ class UserDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
         # List fields you want to expose. Be careful about sensitive data.
-        fields = ('id', 'username', 'email', 'tipo', 'telefono', 'provincia', 'nombre', 'nombre_empresa', 'es_aprobada',
+        fields = ('id', 'username', 'email', 'tipo', 'telefono', 'provincia', 'nombre', 'biografia', 'nombre_empresa', 'es_aprobada',
                   'tiene_ninos', 'tiene_otros_animales', 'tipo_vivienda', 'prefiere_pequenos',
                   'disponible_para_paseos', 'acepta_enfermos', 'acepta_viejos',
                   'busca_tranquilo', 'tiene_trabajo', 'animal_estara_solo',
@@ -156,6 +157,7 @@ class UserProfileUpdateSerializer(serializers.ModelSerializer):
             'telefono',
             'provincia',
             'nombre',
+            'biografia',
             'tiene_ninos',
             'tiene_otros_animales',
             'tipo_vivienda',
@@ -171,6 +173,7 @@ class UserProfileUpdateSerializer(serializers.ModelSerializer):
             'telefono': {'required': False, 'allow_blank': True},
             'provincia': {'required': False, 'allow_blank': True},
             'nombre': {'required': False, 'allow_blank': True},
+            'biografia': {'required': False, 'allow_blank': True},
             'tiene_ninos': {'required': False},
             'tiene_otros_animales': {'required': False},
             'tipo_vivienda': {'required': False},

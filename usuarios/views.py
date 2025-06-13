@@ -101,6 +101,7 @@ def user_profile(request):
     
     if user.tipo == 'USUARIO':
         data.update({
+            'biografia': user.biografia,
             'tiene_ninos': user.tiene_ninos,
             'tiene_otros_animales': user.tiene_otros_animales,
             'tipo_vivienda': user.tipo_vivienda,

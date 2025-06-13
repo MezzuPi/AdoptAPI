@@ -72,6 +72,7 @@ class CustomUser(AbstractUser):
 
     # Solo para usuario adoptante
     nombre = models.CharField(max_length=100, blank=True)    
+    biografia = models.TextField(blank=True)
     tiene_ninos = models.BooleanField(default=False)
     tiene_otros_animales = models.BooleanField(default=False)
     tipo_vivienda = models.BooleanField(default=False)
