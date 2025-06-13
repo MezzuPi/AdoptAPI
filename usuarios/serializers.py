@@ -144,3 +144,41 @@ class UserDetailSerializer(serializers.ModelSerializer):
                   'busca_tranquilo', 'tiene_trabajo', 'animal_estara_solo',
                   'first_name', 'last_name', 'is_staff', 'is_active', 'date_joined')
         read_only_fields = ('id', 'username', 'email', 'es_aprobada', 'is_staff', 'is_active', 'date_joined') # username is email
+
+class UserProfileUpdateSerializer(serializers.ModelSerializer):
+    """
+    Serializer for updating user profile settings.
+    Only includes fields that users are allowed to modify.
+    """
+    class Meta:
+        model = CustomUser
+        fields = (
+            'telefono',
+            'provincia',
+            'nombre',
+            'tiene_ninos',
+            'tiene_otros_animales',
+            'tipo_vivienda',
+            'prefiere_pequenos',
+            'disponible_para_paseos',
+            'acepta_enfermos',
+            'acepta_viejos',
+            'busca_tranquilo',
+            'tiene_trabajo',
+            'animal_estara_solo'
+        )
+        extra_kwargs = {
+            'telefono': {'required': False, 'allow_blank': True},
+            'provincia': {'required': False, 'allow_blank': True},
+            'nombre': {'required': False, 'allow_blank': True},
+            'tiene_ninos': {'required': False},
+            'tiene_otros_animales': {'required': False},
+            'tipo_vivienda': {'required': False},
+            'prefiere_pequenos': {'required': False},
+            'disponible_para_paseos': {'required': False},
+            'acepta_enfermos': {'required': False},
+            'acepta_viejos': {'required': False},
+            'busca_tranquilo': {'required': False},
+            'tiene_trabajo': {'required': False},
+            'animal_estara_solo': {'required': False}
+        }
