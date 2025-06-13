@@ -182,3 +182,38 @@ class UserProfileUpdateSerializer(serializers.ModelSerializer):
             'tiene_trabajo': {'required': False},
             'animal_estara_solo': {'required': False}
         }
+
+class PasswordChangeSerializer(serializers.Serializer):
+    """
+    Serializer for password change endpoint.
+    """
+    current_password = serializers.CharField(required=True, write_only=True)
+    new_password = serializers.CharField(required=True, write_only=True)
+
+    def validate_current_password(self, value):
+        """
+        Check if the current password is correct.
+        """
+        user = self.context['request'].user
+        if not user.check_password(value):
+            raise serializers.ValidationError("La contraseña actual es incorrecta.")
+        return value
+
+    def validate_new_password(self, value):
+        """
+        Validate the new password.
+        """
+        user = self.context['request'].user
+        # Use Django's built-in password validation
+        from django.contrib.auth.password_validation import validate_password
+        validate_password(value, user)
+        return value
+
+    def save(self, **kwargs):
+        """
+        Save the new password.
+        """
+        user = self.context['request'].user
+        user.set_password(self.validated_data['new_password'])
+        user.save()
+        return user

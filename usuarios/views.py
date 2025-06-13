@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
-from usuarios.serializers import UserRegistrationSerializer, UserLoginSerializer, UserDetailSerializer, UserProfileUpdateSerializer
+from usuarios.serializers import UserRegistrationSerializer, UserLoginSerializer, UserDetailSerializer, UserProfileUpdateSerializer, PasswordChangeSerializer
 from rest_framework.parsers import JSONParser
 from django.views.decorators.csrf import csrf_exempt
 import json
@@ -408,3 +408,23 @@ class UpdateUserProfileView(generics.UpdateAPIView):
             instance._prefetched_objects_cache = {}
 
         return Response(serializer.data)
+
+
+class PasswordChangeView(generics.UpdateAPIView):
+    """
+    API view for changing user password.
+    Requires authentication and current password.
+    """
+    serializer_class = PasswordChangeSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self):
+        return self.request.user
+
+    def update(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response({
+            "message": "Contraseña actualizada correctamente"
+        }, status=status.HTTP_200_OK)
