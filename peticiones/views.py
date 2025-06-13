@@ -54,14 +54,18 @@ class PeticionViewSet(viewsets.ModelViewSet):
         """
         This view should return a list of all the petitions
         for the currently authenticated user (if user) or for the
-        company's animals (if company).
+        company's animals (if company). Supports filtering by animal ID.
         """
         user = self.request.user
+        queryset = Peticion.objects.none()
         if user.tipo == 'USUARIO':
-            return Peticion.objects.filter(usuario=user)
+            queryset = Peticion.objects.filter(usuario=user)
         elif user.tipo == 'EMPRESA':
-            return Peticion.objects.filter(animal__empresa=user)
-        return Peticion.objects.none() # Should not happen if authenticated
+            queryset = Peticion.objects.filter(animal__empresa=user)
+        animal_id = self.request.query_params.get('animal')
+        if animal_id:
+            queryset = queryset.filter(animal_id=animal_id)
+        return queryset
 
     def perform_create(self, serializer):
         """

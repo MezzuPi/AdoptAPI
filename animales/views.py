@@ -51,10 +51,11 @@ class AnimalViewSet(viewsets.ModelViewSet):
 
     # You can add more custom actions or override other methods here if needed
     # For example, to list only animals created by the current empresa:
-    # def get_queryset(self):
-    #     user = self.request.user
-    #     if user.is_authenticated and user.tipo == 'EMPRESA':
-    #         return Animal.objects.filter(empresa=user)
-    #     elif user.is_authenticated and user.tipo == 'PARTICULAR': # Or is_staff for admin view all
-    #         return Animal.objects.all() # Allow particulars to see all
-    #     return Animal.objects.none() # Or handle anonymous users as needed
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_authenticated:
+            if user.tipo == 'EMPRESA':
+                return Animal.objects.filter(empresa=user)
+            elif user.tipo == 'USUARIO': # Or is_staff for admin view all
+                return Animal.objects.all() # Allow particulars to see all
+        return Animal.objects.all() # Or handle anonymous users as needed
