@@ -4,4 +4,4 @@ from .models import ContactForm
 class ContactFormSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContactForm
-        fields = ['nombre_empresa', 'email', 'telefono', 'mensaje'] 
+        fields = ['nombre_empresa', 'email', 'telefono', 'provincia', 'mensaje'] 

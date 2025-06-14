@@ -27,6 +27,7 @@ class ContactFormView(APIView):
             Empresa: {contact.nombre_empresa}
             Email: {contact.email}
             Teléfono: {contact.telefono}
+            Provincia: {contact.provincia}
             
             Mensaje:
             {contact.mensaje}
