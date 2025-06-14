@@ -31,6 +31,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include(router.urls)),
     path('api/', include('peticiones.urls')),
+    path('api/', include('contacto.urls')),  # Add this line for contact form endpoints
 
     # User management endpoints
     path('api/register/', UserRegistrationView.as_view(), name='user_register'),

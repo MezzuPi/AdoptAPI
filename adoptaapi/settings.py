@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     'usuarios',
     'animales',
     'peticiones',
+    'contacto',
     'corsheaders',
     'cloudinary',
 ]
