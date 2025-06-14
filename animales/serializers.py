@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Animal
+from .models import Animal, Decision
 import cloudinary.uploader
 
 class AnimalSerializer(serializers.ModelSerializer):
@@ -34,3 +34,9 @@ class AnimalSerializer(serializers.ModelSerializer):
 
         animal = Animal.objects.create(**validated_data)
         return animal
+
+class DecisionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Decision
+        fields = ['id', 'usuario', 'animal', 'tipo_decision', 'fecha_decision']
+        read_only_fields = ['usuario', 'fecha_decision']

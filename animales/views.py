@@ -1,8 +1,9 @@
 from django.shortcuts import render
 from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
-from .models import Animal
-from .serializers import AnimalSerializer
+from .models import Animal, Decision
+from .serializers import AnimalSerializer, DecisionSerializer
+from rest_framework.decorators import action
 
 # Create your views here.
 
@@ -55,7 +56,50 @@ class AnimalViewSet(viewsets.ModelViewSet):
         user = self.request.user
         if user.is_authenticated:
             if user.tipo == 'EMPRESA':
+                # Empresas ven todos sus propios animales
                 return Animal.objects.filter(empresa=user)
-            elif user.tipo == 'USUARIO': # Or is_staff for admin view all
-                return Animal.objects.all() # Allow particulars to see all
-        return Animal.objects.all() # Or handle anonymous users as needed
+            elif user.tipo == 'USUARIO':
+                # Usuarios normales solo ven animales no adoptados que no han visto
+                animales_vistos = Decision.objects.filter(usuario=user).values_list('animal_id', flat=True)
+                return Animal.objects.filter(
+                    estado='No adoptado'
+                ).exclude(
+                    id__in=animales_vistos
+                )
+        # Para usuarios no autenticados, mostrar todos los animales no adoptados
+        return Animal.objects.filter(estado='No adoptado')
+
+class DecisionViewSet(viewsets.ModelViewSet):
+    serializer_class = DecisionSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.tipo == 'EMPRESA':
+            # Empresas solo ven decisiones sobre sus propios animales
+            return Decision.objects.filter(animal__empresa=user)
+        else:
+            # Usuarios normales solo ven sus propias decisiones
+            return Decision.objects.filter(usuario=user)
+
+    def perform_create(self, serializer):
+        serializer.save(usuario=self.request.user)
+
+    @action(detail=False, methods=['delete'])
+    def reset_ignorados(self, request):
+        """
+        Elimina todas las decisiones de tipo 'IGNORAR' del usuario.
+        Solo disponible para usuarios normales.
+        """
+        if request.user.tipo != 'USUARIO':
+            return Response(
+                {'error': 'Esta acción solo está disponible para usuarios normales.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        Decision.objects.filter(
+            usuario=request.user,
+            tipo_decision='IGNORAR'
+        ).delete()
+        
+        return Response(status=status.HTTP_204_NO_CONTENT)

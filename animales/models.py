@@ -74,3 +74,20 @@ class Animal(models.Model):
 
     def __str__(self):
         return self.nombre
+
+class Decision(models.Model):
+    TIPO_DECISION_CHOICES = [
+        ('SOLICITAR', 'Solicitar'),
+        ('IGNORAR', 'Ignorar'),
+    ]
+
+    usuario = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='decisiones')
+    animal = models.ForeignKey(Animal, on_delete=models.CASCADE, related_name='decisiones')
+    tipo_decision = models.CharField(max_length=10, choices=TIPO_DECISION_CHOICES)
+    fecha_decision = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('usuario', 'animal')  # Un usuario solo puede decidir una vez sobre un animal
+
+    def __str__(self):
+        return f"{self.usuario.username} - {self.animal.nombre} - {self.tipo_decision}"
