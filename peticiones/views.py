@@ -189,3 +189,64 @@ class PeticionViewSet(viewsets.ModelViewSet):
         queryset = self._get_base_queryset().filter(estado='Pendiente')
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
+
+    # New endpoints for specific animal peticiones
+    @action(detail=True, methods=['get'], permission_classes=[IsCompany])
+    def default_animal(self, request, pk=None):
+        """
+        Shows only Aceptadas or Pendientes peticiones for a specific animal.
+        Supports ordering through query parameters:
+        - order_by: field to order by ('fecha_peticion', 'animal__nombre', 'animal__fecha_nacimiento')
+        - order_direction: 'asc' or 'desc'
+        """
+        queryset = self._get_base_queryset().filter(
+            animal_id=pk,
+            estado__in=['Aceptada', 'Pendiente']
+        )
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['get'], permission_classes=[IsCompany])
+    def rechazadas_animal(self, request, pk=None):
+        """
+        Shows only Rechazadas peticiones for a specific animal.
+        Supports ordering through query parameters:
+        - order_by: field to order by ('fecha_peticion', 'animal__nombre', 'animal__fecha_nacimiento')
+        - order_direction: 'asc' or 'desc'
+        """
+        queryset = self._get_base_queryset().filter(
+            animal_id=pk,
+            estado='Rechazada'
+        )
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['get'], permission_classes=[IsCompany])
+    def aceptadas_animal(self, request, pk=None):
+        """
+        Shows only Aceptadas peticiones for a specific animal.
+        Supports ordering through query parameters:
+        - order_by: field to order by ('fecha_peticion', 'animal__nombre', 'animal__fecha_nacimiento')
+        - order_direction: 'asc' or 'desc'
+        """
+        queryset = self._get_base_queryset().filter(
+            animal_id=pk,
+            estado='Aceptada'
+        )
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['get'], permission_classes=[IsCompany])
+    def pendientes_animal(self, request, pk=None):
+        """
+        Shows only Pendientes peticiones for a specific animal.
+        Supports ordering through query parameters:
+        - order_by: field to order by ('fecha_peticion', 'animal__nombre', 'animal__fecha_nacimiento')
+        - order_direction: 'asc' or 'desc'
+        """
+        queryset = self._get_base_queryset().filter(
+            animal_id=pk,
+            estado='Pendiente'
+        )
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
