@@ -60,9 +60,11 @@ class AnimalViewSet(viewsets.ModelViewSet):
                 return Animal.objects.filter(empresa=user)
             elif user.tipo == 'USUARIO':
                 # Usuarios normales solo ven animales no adoptados que no han visto
+                # y que están en su misma provincia
                 animales_vistos = Decision.objects.filter(usuario=user).values_list('animal_id', flat=True)
                 return Animal.objects.filter(
-                    estado='No adoptado'
+                    estado='No adoptado',
+                    empresa__provincia=user.provincia  # Filtrar por provincia
                 ).exclude(
                     id__in=animales_vistos
                 )
