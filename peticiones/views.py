@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
+from rest_framework.decorators import action
 from .models import Peticion, Animal
 from .serializers import PeticionListSerializer, PeticionCreateSerializer, PeticionUpdateSerializer
 
@@ -116,3 +117,75 @@ class PeticionViewSet(viewsets.ModelViewSet):
         
         self.perform_destroy(peticion)
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def _get_base_queryset(self):
+        """
+        Base queryset for empresa peticiones with ordering.
+        Supports dynamic ordering through query parameters:
+        - order_by: field to order by ('fecha_peticion', 'animal__nombre', 'animal__fecha_nacimiento')
+        - order_direction: 'asc' or 'desc' (defaults to 'desc' for fecha_peticion, 'asc' for others)
+        """
+        queryset = self.get_queryset().select_related('animal')
+        
+        # Get ordering parameters from request
+        order_by = self.request.query_params.get('order_by', 'fecha_peticion')
+        order_direction = self.request.query_params.get('order_direction', 'desc' if order_by == 'fecha_peticion' else 'asc')
+        
+        # Validate order_by field
+        valid_fields = ['fecha_peticion', 'animal__nombre', 'animal__fecha_nacimiento']
+        if order_by not in valid_fields:
+            order_by = 'fecha_peticion'  # Default to fecha_peticion if invalid field
+        
+        # Apply ordering
+        prefix = '-' if order_direction == 'desc' else ''
+        return queryset.order_by(f'{prefix}{order_by}')
+
+    @action(detail=False, methods=['get'], permission_classes=[IsCompany])
+    def default(self, request):
+        """
+        Shows only Aceptadas or Pendientes peticiones for the empresa.
+        Supports ordering through query parameters:
+        - order_by: field to order by ('fecha_peticion', 'animal__nombre', 'animal__fecha_nacimiento')
+        - order_direction: 'asc' or 'desc'
+        """
+        queryset = self._get_base_queryset().filter(
+            estado__in=['Aceptada', 'Pendiente']
+        )
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'], permission_classes=[IsCompany])
+    def rechazadas(self, request):
+        """
+        Shows only Rechazadas peticiones for the empresa.
+        Supports ordering through query parameters:
+        - order_by: field to order by ('fecha_peticion', 'animal__nombre', 'animal__fecha_nacimiento')
+        - order_direction: 'asc' or 'desc'
+        """
+        queryset = self._get_base_queryset().filter(estado='Rechazada')
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'], permission_classes=[IsCompany])
+    def aceptadas(self, request):
+        """
+        Shows only Aceptadas peticiones for the empresa.
+        Supports ordering through query parameters:
+        - order_by: field to order by ('fecha_peticion', 'animal__nombre', 'animal__fecha_nacimiento')
+        - order_direction: 'asc' or 'desc'
+        """
+        queryset = self._get_base_queryset().filter(estado='Aceptada')
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'], permission_classes=[IsCompany])
+    def pendientes(self, request):
+        """
+        Shows only Pendientes peticiones for the empresa.
+        Supports ordering through query parameters:
+        - order_by: field to order by ('fecha_peticion', 'animal__nombre', 'animal__fecha_nacimiento')
+        - order_direction: 'asc' or 'desc'
+        """
+        queryset = self._get_base_queryset().filter(estado='Pendiente')
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
