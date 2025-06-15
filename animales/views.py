@@ -2,8 +2,9 @@ from django.shortcuts import render
 from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
 from .models import Animal, Decision
-from .serializers import AnimalSerializer, DecisionSerializer
+from .serializers import AnimalSerializer, DecisionSerializer, AnimalImageSerializer
 from rest_framework.decorators import action
+import cloudinary.uploader
 
 # Create your views here.
 
@@ -70,6 +71,55 @@ class AnimalViewSet(viewsets.ModelViewSet):
                 )
         # Para usuarios no autenticados, mostrar todos los animales no adoptados
         return Animal.objects.filter(estado='No adoptado')
+
+    @action(detail=True, methods=['post'], url_path='imagenes')
+    def images(self, request, pk=None):
+        """
+        Add or replace an image for an animal.
+        Requires 'image' file and 'position' (1-4) in the request.
+        """
+        animal = self.get_object()
+        serializer = AnimalImageSerializer(data=request.data, context={'animal': animal})
+        
+        if serializer.is_valid():
+            try:
+                # Upload image to Cloudinary
+                upload_result = cloudinary.uploader.upload(serializer.validated_data['image'])
+                secure_url = upload_result['secure_url']
+                
+                # Update the corresponding image field
+                position = serializer.validated_data['position']
+                setattr(animal, f'imagen{position}', secure_url)
+                animal.save()
+                
+                return Response({
+                    'message': f'Image {position} updated successfully',
+                    'image_url': secure_url
+                }, status=status.HTTP_200_OK)
+                
+            except Exception as e:
+                return Response({
+                    'error': f'Error uploading image: {str(e)}'
+                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=['delete'], url_path='imagenes/(?P<position>[1-4])')
+    def delete_image(self, request, pk=None, position=None):
+        """
+        Delete an image from an animal.
+        Position should be 1-4 indicating which image to delete.
+        """
+        animal = self.get_object()
+        position = int(position)
+        
+        # Clear the image URL
+        setattr(animal, f'imagen{position}', None)
+        animal.save()
+        
+        return Response({
+            'message': f'Image {position} deleted successfully'
+        }, status=status.HTTP_200_OK)
 
 class DecisionViewSet(viewsets.ModelViewSet):
     serializer_class = DecisionSerializer

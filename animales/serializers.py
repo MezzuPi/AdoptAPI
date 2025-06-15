@@ -45,3 +45,13 @@ class DecisionSerializer(serializers.ModelSerializer):
         model = Decision
         fields = ['id', 'usuario', 'animal', 'tipo_decision', 'fecha_decision']
         read_only_fields = ['usuario', 'fecha_decision']
+
+class AnimalImageSerializer(serializers.Serializer):
+    image = serializers.ImageField(required=True)
+    position = serializers.IntegerField(min_value=1, max_value=4, required=True)
+
+    def validate_position(self, value):
+        animal = self.context.get('animal')
+        if not animal:
+            raise serializers.ValidationError("Animal instance is required")
+        return value
