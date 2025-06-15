@@ -235,6 +235,7 @@ def api_documentation(request):
             'POST /api/auth/logout/': 'Cerrar sesión de usuario (requiere token). Invalida el token en el servidor.',
             'GET /api/auth/profile/': 'Obtener perfil del usuario autenticado (requiere token).',
             'PUT/PATCH /api/auth/profile/': 'Actualizar perfil del usuario autenticado (requiere token).',
+            'GET /api/auth/check-email/': 'Verificar disponibilidad de email para registro. Query param: email. Devuelve {available: true/false, email: "email@example.com"}.',
             # Documentación de animales (asumiendo que está en animales.urls y accesible bajo /api/)
             'GET /api/animales/': 'Listar todos los animales (requiere autenticación).',
             'POST /api/animales/': 'Crear un nuevo animal (requiere autenticación y ser tipo EMPRESA).',
@@ -260,15 +261,16 @@ def api_documentation(request):
             'provincia': 'Madrid',
             # ... otros campos opcionales de perfil de adoptante ...
         },
-        # 'example_company_registration': { # Comentado porque el registro de empresa es via admin
-        #     'username': 'empresa@example.com',
-        #     'password': 'mi_password',
-        #     'password2': 'mi_password',
-        #     'tipo': 'EMPRESA',
-        #     'telefono': '123456789',
-        #     'provincia': 'Madrid',
-        #     'nombre_empresa': 'Mi Protectora',
-        # },
+        'example_email_check (GET /api/auth/check-email/)': {
+            'url': '/api/auth/check-email/?email=usuario@example.com',
+            'response_success': {
+                'available': True,
+                'email': 'usuario@example.com'
+            },
+            'response_error': {
+                'error': 'Email is required'
+            }
+        },
         'example_login (POST /api/auth/login/)': {
             'email': 'usuario@example.com', # o empresa@example.com
             'password': 'tu_contraseña',
@@ -429,3 +431,24 @@ class PasswordChangeView(generics.UpdateAPIView):
         return Response({
             "message": "Contraseña actualizada correctamente"
         }, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def check_email_availability(request):
+    """
+    Check if an email is available for registration.
+    Returns a JSON response indicating if the email is available and the email itself.
+    """
+    email = request.query_params.get('email')
+    
+    if not email:
+        return Response({'error': 'Email is required'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    # Check if email already exists
+    exists = CustomUser.objects.filter(username=email).exists()
+    
+    return Response({
+        'available': not exists,
+        'email': email
+    })
