@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import Animal, Decision
 import cloudinary.uploader
+from datetime import date
 
 class AnimalSerializer(serializers.ModelSerializer):
     imagen1_file = serializers.ImageField(write_only=True, required=False)
@@ -31,6 +32,10 @@ class AnimalSerializer(serializers.ModelSerializer):
         # Assign uploaded image URLs to the model fields
         for i in range(1, 5):
             validated_data[f'imagen{i}'] = images.get(f'imagen{i}')
+
+        # Set default fecha_creacion if not provided
+        if 'fecha_creacion' not in validated_data:
+            validated_data['fecha_creacion'] = date.today()
 
         animal = Animal.objects.create(**validated_data)
         return animal

@@ -1,6 +1,7 @@
 from django.db import models
 from usuarios.models import CustomUser
 from django.conf import settings
+from datetime import date
 
 class Animal(models.Model):
     ESPECIE_CHOICES = [
@@ -51,6 +52,7 @@ class Animal(models.Model):
     ]
 
     empresa = models.ForeignKey(CustomUser, on_delete=models.CASCADE, limit_choices_to={'tipo': 'EMPRESA'}, related_name='animales') 
+    fecha_creacion = models.DateField(default=date.today)
     nombre = models.CharField(max_length=100)
     especie = models.CharField(max_length=10, choices=ESPECIE_CHOICES)
     genero = models.CharField(max_length=10, choices=GENERO_CHOICES)
