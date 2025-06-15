@@ -220,3 +220,24 @@ class PasswordChangeSerializer(serializers.Serializer):
         user.set_password(self.validated_data['new_password'])
         user.save()
         return user
+
+class PasswordResetRequestSerializer(serializers.Serializer):
+    """
+    Serializer para solicitar el reseteo de contraseña.
+    """
+    email = serializers.EmailField(required=True)
+
+class PasswordResetVerifySerializer(serializers.Serializer):
+    """
+    Serializer para verificar el token de reseteo.
+    """
+    uidb64 = serializers.CharField(required=True)
+    token = serializers.CharField(required=True)
+
+class PasswordResetConfirmSerializer(serializers.Serializer):
+    """
+    Serializer para confirmar el reseteo de contraseña.
+    """
+    uidb64 = serializers.CharField(required=True)
+    token = serializers.CharField(required=True)
+    new_password = serializers.CharField(required=True, write_only=True)

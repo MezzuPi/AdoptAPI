@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
-from usuarios.serializers import UserRegistrationSerializer, UserLoginSerializer, UserDetailSerializer, UserProfileUpdateSerializer, PasswordChangeSerializer
+from usuarios.serializers import UserRegistrationSerializer, UserLoginSerializer, UserDetailSerializer, UserProfileUpdateSerializer, PasswordChangeSerializer, PasswordResetRequestSerializer, PasswordResetVerifySerializer, PasswordResetConfirmSerializer
 from rest_framework.parsers import JSONParser
 from django.views.decorators.csrf import csrf_exempt
 import json
@@ -11,6 +11,13 @@ from rest_framework.response import Response
 from django.contrib.auth import authenticate, login, logout, get_user_model
 from rest_framework.authtoken.models import Token
 from usuarios.models import CustomUser
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
+from django.core.mail import send_mail
+from django.conf import settings
+from django.template.loader import render_to_string
+from django.urls import reverse
 
 CustomUser = get_user_model()
 
@@ -452,3 +459,151 @@ def check_email_availability(request):
         'available': not exists,
         'email': email
     })
+
+
+class PasswordResetRequestView(generics.GenericAPIView):
+    """
+    Vista para solicitar el reseteo de contraseña.
+    Envía un email con el token de reseteo.
+    """
+    permission_classes = [AllowAny]
+    serializer_class = PasswordResetRequestSerializer
+
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        email = serializer.validated_data['email']
+
+        try:
+            user = CustomUser.objects.get(email=email)
+        except CustomUser.DoesNotExist:
+            # No revelamos si el email existe o no por seguridad
+            return Response(
+                {'message': 'Si el email existe, recibirás instrucciones para resetear tu contraseña'},
+                status=status.HTTP_200_OK
+            )
+
+        # Generar token
+        token = default_token_generator.make_token(user)
+        uid = urlsafe_base64_encode(force_bytes(user.pk))
+
+        # Construir el enlace para el frontend
+        frontend_url = f"http://localhost:5173/reset-password/{uid}/{token}"
+        
+        # Renderizar el template del email
+        context = {
+            'user': user,
+            'reset_url': frontend_url,
+            'site_name': 'AdoptaAPI'
+        }
+        
+        try:
+            # Usar nuestros templates personalizados con la ruta correcta
+            email_html_message = render_to_string('registration/password_reset_email.html', context)
+            email_plain_message = render_to_string('registration/password_reset_email.txt', context)
+            
+            # Print debug information
+            print(f"\nAttempting to send email to: {email}")
+            print(f"From: {settings.EMAIL_HOST_USER}")
+            print(f"Reset URL: {frontend_url}")
+            
+            send_mail(
+                'Reseteo de contraseña - AdoptaAPI',
+                email_plain_message,
+                settings.EMAIL_HOST_USER,
+                [email],
+                html_message=email_html_message,
+                fail_silently=False,
+            )
+            return Response(
+                {'message': 'Si el email existe, recibirás instrucciones para resetear tu contraseña'},
+                status=status.HTTP_200_OK
+            )
+        except Exception as e:
+            # Print detailed error information
+            print(f"\nError sending email:")
+            print(f"Error type: {type(e).__name__}")
+            print(f"Error message: {str(e)}")
+            print(f"Email settings:")
+            print(f"  HOST: {settings.EMAIL_HOST}")
+            print(f"  PORT: {settings.EMAIL_PORT}")
+            print(f"  USE_TLS: {settings.EMAIL_USE_TLS}")
+            print(f"  HOST_USER: {settings.EMAIL_HOST_USER}")
+            print(f"  HOST_PASSWORD: {'*' * len(settings.EMAIL_HOST_PASSWORD) if settings.EMAIL_HOST_PASSWORD else 'Not set'}")
+            
+            return Response(
+                {'error': f'Error al enviar el email: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+class PasswordResetVerifyView(generics.GenericAPIView):
+    """
+    Vista para verificar el token de reseteo de contraseña.
+    """
+    permission_classes = [AllowAny]
+    serializer_class = PasswordResetVerifySerializer
+
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        uidb64 = serializer.validated_data['uidb64']
+        token = serializer.validated_data['token']
+
+        try:
+            uid = force_str(urlsafe_base64_decode(uidb64))
+            user = CustomUser.objects.get(pk=uid)
+        except (TypeError, ValueError, OverflowError, CustomUser.DoesNotExist):
+            user = None
+
+        if user is not None and default_token_generator.check_token(user, token):
+            return Response(
+                {'message': 'Token válido'},
+                status=status.HTTP_200_OK
+            )
+        return Response(
+            {'error': 'Token inválido o expirado'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+class PasswordResetConfirmView(generics.GenericAPIView):
+    """
+    Vista para confirmar el reseteo de contraseña.
+    """
+    permission_classes = [AllowAny]
+    serializer_class = PasswordResetConfirmSerializer
+
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        uidb64 = serializer.validated_data['uidb64']
+        token = serializer.validated_data['token']
+        new_password = serializer.validated_data['new_password']
+
+        try:
+            uid = force_str(urlsafe_base64_decode(uidb64))
+            user = CustomUser.objects.get(pk=uid)
+        except (TypeError, ValueError, OverflowError, CustomUser.DoesNotExist):
+            user = None
+
+        if user is not None and default_token_generator.check_token(user, token):
+            # Validar la nueva contraseña
+            try:
+                from django.contrib.auth.password_validation import validate_password
+                validate_password(new_password, user)
+            except Exception as e:
+                return Response(
+                    {'error': str(e)},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Establecer la nueva contraseña
+            user.set_password(new_password)
+            user.save()
+            return Response(
+                {'message': 'Contraseña actualizada correctamente'},
+                status=status.HTTP_200_OK
+            )
+        return Response(
+            {'error': 'Token inválido o expirado'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
